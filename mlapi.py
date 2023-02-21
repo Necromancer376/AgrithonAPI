@@ -9,7 +9,7 @@ import os
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 # from data import disease_map, details_map
-import scipy.integrate as integrate
+# import scipy.integrate as integrate
 
 
 if not os.path.exists('model.h5'):
