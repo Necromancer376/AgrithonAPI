@@ -46,13 +46,11 @@ def predict(test_dir):
 
     prediction_dict = {}
     for value in test_df.to_dict('index').values():
-        image_name = value['Image']
         image_prediction = value['Label']
-        prediction_dict[image_name] = {}
-        prediction_dict[image_name]['prediction'] = image_prediction
-        prediction_dict[image_name]['description'] = details_map[image_prediction][0]
-        prediction_dict[image_name]['symptoms'] = details_map[image_prediction][1]
-        prediction_dict[image_name]['source'] = details_map[image_prediction][2]
+        prediction_dict['prediction'] = image_prediction
+        prediction_dict['description'] = details_map[image_prediction][0]
+        prediction_dict['symptoms'] = details_map[image_prediction][1]
+        prediction_dict['source'] = details_map[image_prediction][2]
     return prediction_dict
 
 
@@ -64,7 +62,6 @@ async def image_upload(img: UploadFile = File(...)):
         shutil.copyfileobj(img.file, buffer)
 
     return predict("./test_data")
-
 
 
 disease_map = {
