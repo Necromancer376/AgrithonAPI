@@ -8,8 +8,7 @@ import requests
 import os
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-# from data import disease_map, details_map
-# import scipy.integrate as integrate
+import tensorflow as tf
 
 
 if not os.path.exists('model.h5'):
@@ -41,7 +40,7 @@ def predict(test_dir):
         shuffle = False
     )
     predict = model.predict(test_generator, steps = np.ceil(test_generator.samples/20))
-    test_df['Label'] = np.argmax(predict, axis = -1) # axis = -1 --> To compute the max element index within list of lists
+    test_df['Label'] = np.argmax(predict, axis = -1)
     test_df['Label'] = test_df['Label'].replace(disease_map)
 
     prediction_dict = {}
@@ -56,13 +55,47 @@ def predict(test_dir):
 
 app = FastAPI()
 
+new_filename = ""
+
+
+def move_file(source_dir, dest_dir, filename):
+        global new_filename
+        source_path = os.path.join(source_dir, filename)
+        dest_path = os.path.join(dest_dir, filename)
+
+        if os.path.exists(dest_path):
+            count = 1
+            while True:
+                new_filename = f"{os.path.splitext(filename)[0]}_{count}{os.path.splitext(filename)[1]}"
+                dest_path = os.path.join(dest_dir, new_filename)
+                if not os.path.exists(dest_path):
+                    break
+                count += 1
+
+        os.rename(source_path, dest_path)
+
+source_dir = "./test_data"
+dest_dir = "./log"
+filename = "img.jpg"
+
+move_file(source_dir, dest_dir, filename)
+
 @app.post('/')
 async def image_upload(img: UploadFile = File(...)):
+    global new_filename
     with open("./test_data/img.jpg", "wb") as buffer:
         shutil.copyfileobj(img.file, buffer)
+    
+    log = predict("./test_data")
+    move_file(source_dir,dest_dir,filename)
+    temp = log.copy()
+    temp['img']=new_filename
 
-    return predict("./test_data")
+    with open('./log/convert.txt', 'a') as convert_file:
+        convert_file.write(json.dumps(temp))
+        convert_file.write("\n")
 
+    return log
 
 disease_map = {
     0: 'Apple: Apple Scab',
